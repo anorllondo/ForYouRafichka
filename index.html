@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Валентинка</title>
+    <link rel="icon" href="img/logo.jpg" type="image/jpeg">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffe6e6;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        /* Общие стили для карточек */
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 350px;
+            position: absolute;
+            transition: opacity 0.5s ease;
+            display: none;
+            /* Чтобы содержимое центрировалось */
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Класс для отображения активной карточки */
+        .card.active {
+            display: flex; /* Используем flex для центрирования фото */
+            animation: fadeIn 0.5s;
+        }
+
+        h1 {
+            color: #ff4d4d;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            line-height: 1.3;
+        }
+
+        p {
+            font-size: 1.2em;
+            color: #555;
+            margin-top: 15px;
+            margin-bottom: 0;
+        }
+
+        /* --- СТИЛИ ДЛЯ ФОТОГРАФИИ --- */
+        .photo-frame {
+            background: white;
+            padding: 10px 10px 30px 10px; /* Нижний отступ больше, как у Polaroid */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); /* Тень */
+            border: 1px solid #ddd;
+            transform: rotate(-3deg); /* Легкий наклон */
+            width: 220px; /* Ширина рамки */
+            margin: 10px auto;
+            transition: transform 0.3s ease;
+        }
+
+        .photo-frame:hover {
+            transform: rotate(0deg) scale(1.05); /* При наведении выравнивается */
+            z-index: 50;
+        }
+
+        .photo-frame img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 2px;
+        }
+        /* --------------------------- */
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            position: relative;
+            min-height: 60px;
+            width: 100%;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            outline: none;
+        }
+
+        .primary-btn {
+            background-color: #ff4d4d;
+            color: white;
+            box-shadow: 0 4px 10px rgba(255, 77, 77, 0.4);
+            z-index: 2;
+        }
+
+        .primary-btn:hover {
+            background-color: #e60000;
+            transform: scale(1.05);
+        }
+
+        #noBtn {
+            background-color: #e0e0e0;
+            color: #333;
+            position: relative;
+            transition: transform 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .heart {
+            position: fixed;
+            color: #ff4d4d;
+            animation: fall 3s linear forwards;
+            z-index: 100;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(105vh); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card active" id="screen-main">
+    <h1>Будешь ли ты моей Валентинкой? ❤️</h1>
+    <div class="buttons">
+        <button class="primary-btn" id="yesBtn">Да</button>
+        <button id="noBtn">Нет</button>
+    </div>
+</div>
+
+<div class="card" id="screen-question">
+    <h1>Ты серьезно? 😥</h1>
+    <div class="buttons">
+        <button class="primary-btn" onclick="goToPrank()">Да</button>
+    </div>
+</div>
+
+<div class="card" id="screen-prank">
+    <h1>АХХАХАХА ты серьезно думала, что я дам тебе такую возможность? 😂🫵</h1>
+    <div class="buttons">
+        <button class="primary-btn" onclick="resetToStart()">Вернуться</button>
+    </div>
+</div>
+
+<div class="card" id="screen-success">
+    <h1>Ура! Я так и знал! 🥰</h1>
+
+    <div class="photo-frame">
+        <img src="img/we.jpg" alt="Наша фотография" id="valentine-photo">
+    </div>
+
+    <p>Люблю тебя! ❤️</p>
+</div>
+
+<script>
+    const screenMain = document.getElementById('screen-main');
+    const screenQuestion = document.getElementById('screen-question');
+    const screenPrank = document.getElementById('screen-prank');
+    const screenSuccess = document.getElementById('screen-success');
+
+    const noBtn = document.getElementById('noBtn');
+    const yesBtn = document.getElementById('yesBtn');
+
+    let hoverCount = 0;
+    let isHardMode = false;
+
+    noBtn.addEventListener('mouseover', handleNoHover);
+    noBtn.addEventListener('click', handleNoClick);
+
+    function handleNoHover() {
+        if (isHardMode) {
+            moveButton();
+            return;
+        }
+        if (hoverCount < 2) {
+            moveButton();
+            hoverCount++;
+        }
+    }
+
+    function moveButton() {
+        const limitX = 150;
+        const limitY = 50;
+        const randomX = (Math.random() - 0.5) * (limitX * 2);
+        const randomY = (Math.random() - 0.5) * (limitY * 2);
+        noBtn.style.transform = `translate(${randomX}px, ${randomY}px)`;
+    }
+
+    function handleNoClick() {
+        if (!isHardMode) {
+            switchScreen(screenMain, screenQuestion);
+        }
+    }
+
+    function goToPrank() {
+        switchScreen(screenQuestion, screenPrank);
+    }
+
+    function resetToStart() {
+        isHardMode = true;
+        hoverCount = 0;
+        noBtn.style.transform = `translate(0px, 0px)`;
+        switchScreen(screenPrank, screenMain);
+    }
+
+    yesBtn.addEventListener('click', () => {
+        switchScreen(screenMain, screenSuccess);
+        createHearts();
+    });
+
+    function switchScreen(from, to) {
+        from.classList.remove('active');
+        setTimeout(() => {
+            to.classList.add('active');
+        }, 100);
+    }
+
+    function createHearts() {
+        setInterval(() => {
+            const heart = document.createElement('div');
+            heart.innerHTML = '❤️';
+            heart.classList.add('heart');
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.top = '-50px';
+            heart.style.fontSize = Math.random() * 20 + 20 + 'px';
+            document.body.appendChild(heart);
+            setTimeout(() => { heart.remove(); }, 3000);
+        }, 100);
+    }
+</script>
+</body>
+</html>
